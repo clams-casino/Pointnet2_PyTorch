@@ -31,7 +31,7 @@ __global__ void query_ball_point_kernel(int b, int n, int m, float radius,
       scalar_t z = xyz[k * 3 + 2];
       scalar_t d2 = (new_x - x) * (new_x - x) + (new_y - y) * (new_y - y) +
                  (new_z - z) * (new_z - z);
-      if (d2 < radius2) {
+      if (d2 < scalar_t(radius2)) {
         if (cnt == 0) {
           for (int l = 0; l < nsample; ++l) {
             idx[j * nsample + l] = k;
@@ -49,7 +49,7 @@ void query_ball_point_kernel_wrapper(int b, int n, int m, float radius,
                                      at::Tensor xyz, int *idx) {
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
-  AT_DISPATCH_FLOATING_TYPES(xyz.type(), "query_ball_point_kernel", ([&] {
+  AT_DISPATCH_FLOATING_TYPES_AND_HALF(xyz.type(), "query_ball_point_kernel", ([&] {
     query_ball_point_kernel<scalar_t><<<b, opt_n_threads(m), 0, stream>>>(
         b, n, m, radius, nsample,
         new_xyz.data_ptr<scalar_t>(),
