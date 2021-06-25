@@ -2,8 +2,8 @@
 #include "utils.h"
 
 void query_ball_point_kernel_wrapper(int b, int n, int m, float radius,
-                                     int nsample, const float *new_xyz,
-                                     const float *xyz, int *idx);
+                                     int nsample, at::Tensor new_xyz,
+                                     at::Tensor xyz, int *idx);
 
 at::Tensor ball_query(at::Tensor new_xyz, at::Tensor xyz, const float radius,
                       const int nsample) {
@@ -22,8 +22,8 @@ at::Tensor ball_query(at::Tensor new_xyz, at::Tensor xyz, const float radius,
 
   if (new_xyz.is_cuda()) {
     query_ball_point_kernel_wrapper(xyz.size(0), xyz.size(1), new_xyz.size(1),
-                                    radius, nsample, new_xyz.data_ptr<float>(),
-                                    xyz.data_ptr<float>(), idx.data_ptr<int>());
+                                    radius, nsample, new_xyz,
+                                    xyz, idx.data_ptr<int>());
   } else {
     AT_ASSERT(false, "CPU not supported");
   }
