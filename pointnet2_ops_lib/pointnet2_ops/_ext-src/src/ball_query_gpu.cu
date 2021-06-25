@@ -46,7 +46,7 @@ __global__ void query_ball_point_kernel(int b, int n, int m, float radius,
 
 void query_ball_point_kernel_wrapper(int b, int n, int m, float radius,
                                      int nsample, at::Tensor new_xyz,
-                                     at::Tensor xyz, int *idx); {
+                                     at::Tensor xyz, int *idx) {
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
   AT_DISPATCH_FLOATING_TYPES(xyz.type(), "query_ball_point_kernel", ([&] {
