@@ -22,5 +22,5 @@
   do {                                                       \
     AT_ASSERT( (x.scalar_type() == at::ScalarType::Float) || \
                (x.scalar_type() == at::ScalarType::Half),    \
-              #x " must be a float tensor");                 \
+              #x " must be a float or half tensor");         \
   } while (0)
