@@ -282,7 +282,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
       //     <<<b, n_threads, 0, stream>>>(b, n, m, dataset, temp, idxs);
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
-        furthest_point_sampling_kernel<scalar_t, 256><<<b, n_threads, 0, stream>>>(
+        furthest_point_sampling_kernel<scalar_t, 8><<<b, n_threads, 0, stream>>>(
             b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
