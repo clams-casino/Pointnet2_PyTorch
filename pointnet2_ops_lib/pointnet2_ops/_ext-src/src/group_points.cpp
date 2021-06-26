@@ -2,11 +2,11 @@
 #include "utils.h"
 
 void group_points_kernel_wrapper(int b, int c, int n, int npoints, int nsample,
-                                 at::Tensor points, const int *idx,
+                                 const at::Tensor &points, const int *idx,
                                  at::Tensor &out);
 
 void group_points_grad_kernel_wrapper(int b, int c, int n, int npoints,
-                                      int nsample, at::Tensor grad_out,
+                                      int nsample, const at::Tensor &grad_out,
                                       const int *idx, at::Tensor &grad_points);
 
 at::Tensor group_points(at::Tensor points, at::Tensor idx) {

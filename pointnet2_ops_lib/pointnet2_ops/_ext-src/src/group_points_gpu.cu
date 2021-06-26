@@ -29,7 +29,7 @@ __global__ void group_points_kernel(int b, int c, int n, int npoints,
 }
 
 void group_points_kernel_wrapper(int b, int c, int n, int npoints, int nsample,
-                                 at::Tensor points, const int *idx,
+                                 const at::Tensor &points, const int *idx,
                                  at::Tensor &out) {
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
@@ -67,14 +67,14 @@ __global__ void group_points_grad_kernel(int b, int c, int n, int npoints,
     const int j = i % npoints;
     for (int k = 0; k < nsample; ++k) {
       int ii = idx[j * nsample + k];
-      atomicAdd(grad_points + l * n + ii,
+      gpuAtomicAdd(grad_points + l * n + ii,
                 grad_out[(l * npoints + j) * nsample + k]);
     }
   }
 }
 
 void group_points_grad_kernel_wrapper(int b, int c, int n, int npoints,
-                                      int nsample, at::Tensor grad_out,
+                                      int nsample, const at::Tensor &grad_out,
                                       const int *idx, at::Tensor &grad_points) {
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
 
