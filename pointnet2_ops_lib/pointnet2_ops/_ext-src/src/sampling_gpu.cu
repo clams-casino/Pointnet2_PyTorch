@@ -29,7 +29,7 @@ void gather_points_kernel_wrapper(int b, int c, int n, int npoints,
 
   AT_DISPATCH_FLOATING_TYPES_AND_HALF(points.type(), "gather_points", ([&] {
     gather_points_kernel<scalar_t><<<dim3(b, c, 1), opt_n_threads(npoints), 0, at::cuda::getCurrentCUDAStream()>>>(
-        b, c, n, npoints
+        b, c, n, npoints,
         points.data_ptr<scalar_t>(),
         idx,
         out.data_ptr<scalar_t>());
@@ -65,7 +65,7 @@ void gather_points_grad_kernel_wrapper(int b, int c, int n, int npoints,
 
   AT_DISPATCH_FLOATING_TYPES_AND_HALF(grad_out.type(), "gather_points_grad", ([&] {
     gather_points_grad_kernel<scalar_t><<<dim3(b, c, 1), opt_n_threads(npoints), 0, at::cuda::getCurrentCUDAStream()>>>(
-        b, c, n, npoints
+        b, c, n, npoints,
         grad_out.data_ptr<scalar_t>(),
         idx,
         grad_points.data_ptr<scalar_t>());
@@ -205,7 +205,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 512><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
@@ -218,7 +218,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 256><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
@@ -231,7 +231,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 128><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
@@ -244,7 +244,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 64><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
@@ -257,7 +257,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 32><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
@@ -270,7 +270,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 16><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
@@ -283,7 +283,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 256><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
@@ -296,7 +296,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 4><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
@@ -309,7 +309,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 2><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
@@ -322,7 +322,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 1><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
@@ -335,7 +335,7 @@ void furthest_point_sampling_kernel_wrapper(int b, int n, int m,
 
       AT_DISPATCH_FLOATING_TYPES_AND_HALF(dataset.type(), "furthest_point_sampling", ([&] {
         furthest_point_sampling_kernel<scalar_t, 512><<<b, n_threads, 0, stream>>>(
-            b, n, m
+            b, n, m,
             dataset.data_ptr<scalar_t>(),
             temp.data_ptr<scalar_t>(),
             idxs);
