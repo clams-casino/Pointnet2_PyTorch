@@ -1,14 +1,3 @@
-Mixed-Precision Support
------------------------
-PointNet operations now support ``double``, ``float``, and ``Half`` for mixed-precision training
-
-Tested on GTX 1050Ti and Tesla V100
-
-The package ``pointnet2-ops`` can be installed by running the following command. It is a bit different than the original instructions below
-
-::
-  pip install -e pointnet2_ops_lib
-
 Pointnet2/Pointnet++ PyTorch
 ============================
 
@@ -41,7 +30,17 @@ Setup
     pip install -r requirements.txt
 
 
+Mixed-Precision Support
+-----------------------
+PointNet operations now support ``double``, ``float``, and ``Half`` for mixed-precision training
 
+Tested on GTX 1050Ti and Tesla V100
+
+The package ``pointnet2-ops`` can be installed by running the following command in the root of the repo. It is a bit different than the original instructions below
+
+::
+
+  pip install -e pointnet2_ops_lib
 
 
 
