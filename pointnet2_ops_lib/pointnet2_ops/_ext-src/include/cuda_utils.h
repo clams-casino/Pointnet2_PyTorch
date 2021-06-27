@@ -5,6 +5,10 @@
 #include <ATen/cuda/CUDAContext.h>
 #include <cmath>
 
+#include <torch/extension.h>
+
+#include <THC/THCAtomics.cuh> // For atomicAdd with overload for at::ScalarType::Half
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 

@@ -6,10 +6,11 @@
 
 // input: unknown(b, n, 3) known(b, m, 3)
 // output: dist2(b, n, 3), idx(b, n, 3)
+template <typename scalar_t>
 __global__ void three_nn_kernel(int b, int n, int m,
-                                const float *__restrict__ unknown,
-                                const float *__restrict__ known,
-                                float *__restrict__ dist2,
+                                const scalar_t *__restrict__ unknown,
+                                const scalar_t *__restrict__ known,
+                                scalar_t *__restrict__ dist2,
                                 int *__restrict__ idx) {
   int batch_index = blockIdx.x;
   unknown += batch_index * n * 3;
@@ -20,17 +21,17 @@ __global__ void three_nn_kernel(int b, int n, int m,
   int index = threadIdx.x;
   int stride = blockDim.x;
   for (int j = index; j < n; j += stride) {
-    float ux = unknown[j * 3 + 0];
-    float uy = unknown[j * 3 + 1];
-    float uz = unknown[j * 3 + 2];
+    scalar_t ux = unknown[j * 3 + 0];
+    scalar_t uy = unknown[j * 3 + 1];
+    scalar_t uz = unknown[j * 3 + 2];
 
-    double best1 = 1e40, best2 = 1e40, best3 = 1e40;
+    scalar_t best1 = 6e4, best2 = 6e4, best3 = 6e4;
     int besti1 = 0, besti2 = 0, besti3 = 0;
     for (int k = 0; k < m; ++k) {
-      float x = known[k * 3 + 0];
-      float y = known[k * 3 + 1];
-      float z = known[k * 3 + 2];
-      float d = (ux - x) * (ux - x) + (uy - y) * (uy - y) + (uz - z) * (uz - z);
+      scalar_t x = known[k * 3 + 0];
+      scalar_t y = known[k * 3 + 1];
+      scalar_t z = known[k * 3 + 2];
+      scalar_t d = (ux - x) * (ux - x) + (uy - y) * (uy - y) + (uz - z) * (uz - z);
       if (d < best1) {
         best3 = best2;
         besti3 = besti2;
@@ -58,22 +59,32 @@ __global__ void three_nn_kernel(int b, int n, int m,
   }
 }
 
-void three_nn_kernel_wrapper(int b, int n, int m, const float *unknown,
-                             const float *known, float *dist2, int *idx) {
+void three_nn_kernel_wrapper(int b, int n, int m, const at::Tensor &unknown,
+                             const at::Tensor &known, at::Tensor &dist2, int *idx) {
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
-  three_nn_kernel<<<b, opt_n_threads(n), 0, stream>>>(b, n, m, unknown, known,
-                                                      dist2, idx);
+  // three_nn_kernel<<<b, opt_n_threads(n), 0, stream>>>(b, n, m, unknown, known,
+  //                                                     dist2, idx);
+
+  AT_DISPATCH_FLOATING_TYPES_AND_HALF(unknown.type(), "three_nn", ([&] {
+    three_nn_kernel<scalar_t><<<b, opt_n_threads(n), 0, stream>>>(
+        b, n, m,
+        unknown.data_ptr<scalar_t>(),
+        known.data_ptr<scalar_t>(),
+        dist2.data_ptr<scalar_t>(),
+        idx);
+  }));
 
   CUDA_CHECK_ERRORS();
 }
 
 // input: points(b, c, m), idx(b, n, 3), weight(b, n, 3)
 // output: out(b, c, n)
+template <typename scalar_t>
 __global__ void three_interpolate_kernel(int b, int c, int m, int n,
-                                         const float *__restrict__ points,
+                                         const scalar_t *__restrict__ points,
                                          const int *__restrict__ idx,
-                                         const float *__restrict__ weight,
-                                         float *__restrict__ out) {
+                                         const scalar_t *__restrict__ weight,
+                                         scalar_t *__restrict__ out) {
   int batch_index = blockIdx.x;
   points += batch_index * m * c;
 
@@ -87,9 +98,9 @@ __global__ void three_interpolate_kernel(int b, int c, int m, int n,
   for (int i = index; i < c * n; i += stride) {
     const int l = i / n;
     const int j = i % n;
-    float w1 = weight[j * 3 + 0];
-    float w2 = weight[j * 3 + 1];
-    float w3 = weight[j * 3 + 2];
+    scalar_t w1 = weight[j * 3 + 0];
+    scalar_t w2 = weight[j * 3 + 1];
+    scalar_t w3 = weight[j * 3 + 2];
 
     int i1 = idx[j * 3 + 0];
     int i2 = idx[j * 3 + 1];
@@ -101,22 +112,31 @@ __global__ void three_interpolate_kernel(int b, int c, int m, int n,
 }
 
 void three_interpolate_kernel_wrapper(int b, int c, int m, int n,
-                                      const float *points, const int *idx,
-                                      const float *weight, float *out) {
+                                      const at::Tensor &points, const int *idx,
+                                      const at::Tensor &weight, at::Tensor &out) {
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
-  three_interpolate_kernel<<<b, opt_block_config(n, c), 0, stream>>>(
-      b, c, m, n, points, idx, weight, out);
+  // three_interpolate_kernel<<<b, opt_block_config(n, c), 0, stream>>>(
+  //     b, c, m, n, points, idx, weight, out);
+
+  AT_DISPATCH_FLOATING_TYPES_AND_HALF(points.type(), "three_interpolate", ([&] {
+    three_interpolate_kernel<scalar_t><<<b, opt_block_config(n, c), 0, stream>>>(
+        b, c, m, n,
+        points.data_ptr<scalar_t>(),
+        idx,
+        weight.data_ptr<scalar_t>(),
+        out.data_ptr<scalar_t>());
+  }));
 
   CUDA_CHECK_ERRORS();
 }
 
 // input: grad_out(b, c, n), idx(b, n, 3), weight(b, n, 3)
 // output: grad_points(b, c, m)
-
+template <typename scalar_t>
 __global__ void three_interpolate_grad_kernel(
-    int b, int c, int n, int m, const float *__restrict__ grad_out,
-    const int *__restrict__ idx, const float *__restrict__ weight,
-    float *__restrict__ grad_points) {
+    int b, int c, int n, int m, const scalar_t *__restrict__ grad_out,
+    const int *__restrict__ idx, const scalar_t *__restrict__ weight,
+    scalar_t *__restrict__ grad_points) {
   int batch_index = blockIdx.x;
   grad_out += batch_index * n * c;
   idx += batch_index * n * 3;
@@ -128,27 +148,36 @@ __global__ void three_interpolate_grad_kernel(
   for (int i = index; i < c * n; i += stride) {
     const int l = i / n;
     const int j = i % n;
-    float w1 = weight[j * 3 + 0];
-    float w2 = weight[j * 3 + 1];
-    float w3 = weight[j * 3 + 2];
+    scalar_t w1 = weight[j * 3 + 0];
+    scalar_t w2 = weight[j * 3 + 1];
+    scalar_t w3 = weight[j * 3 + 2];
 
     int i1 = idx[j * 3 + 0];
     int i2 = idx[j * 3 + 1];
     int i3 = idx[j * 3 + 2];
 
-    atomicAdd(grad_points + l * m + i1, grad_out[i] * w1);
-    atomicAdd(grad_points + l * m + i2, grad_out[i] * w2);
-    atomicAdd(grad_points + l * m + i3, grad_out[i] * w3);
+    gpuAtomicAdd(grad_points + l * m + i1, grad_out[i] * w1);
+    gpuAtomicAdd(grad_points + l * m + i2, grad_out[i] * w2);
+    gpuAtomicAdd(grad_points + l * m + i3, grad_out[i] * w3);
   }
 }
 
 void three_interpolate_grad_kernel_wrapper(int b, int c, int n, int m,
-                                           const float *grad_out,
-                                           const int *idx, const float *weight,
-                                           float *grad_points) {
+                                           const at::Tensor &grad_out,
+                                           const int *idx, const at::Tensor &weight,
+                                           at::Tensor &grad_points) {
   cudaStream_t stream = at::cuda::getCurrentCUDAStream();
-  three_interpolate_grad_kernel<<<b, opt_block_config(n, c), 0, stream>>>(
-      b, c, n, m, grad_out, idx, weight, grad_points);
+  // three_interpolate_grad_kernel<<<b, opt_block_config(n, c), 0, stream>>>(
+  //     b, c, n, m, grad_out, idx, weight, grad_points);
+
+  AT_DISPATCH_FLOATING_TYPES_AND_HALF(grad_out.type(), "three_interpolate_grad", ([&] {
+    three_interpolate_grad_kernel<scalar_t><<<b, opt_block_config(n, c), 0, stream>>>(
+        b, c, n, m,
+        grad_out.data_ptr<scalar_t>(),
+        idx,
+        weight.data_ptr<scalar_t>(),
+        grad_points.data_ptr<scalar_t>());
+  }));
 
   CUDA_CHECK_ERRORS();
 }
