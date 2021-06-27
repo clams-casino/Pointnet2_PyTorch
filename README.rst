@@ -9,7 +9,6 @@ The package ``pointnet2-ops`` can be installed by running the following command.
 ::
   pip install -e pointnet2_ops_lib
 
-
 Pointnet2/Pointnet++ PyTorch
 ============================
 
